@@ -21,6 +21,8 @@ summary(data)
 data_dt=split(data, data$Date)
 
 
+
+###median as theshold value
 theshold=c()
 wholedf=data.frame()
 for( i in 1:length(data_dt)){
@@ -32,12 +34,12 @@ for( i in 1:length(data_dt)){
 
 col=c(5, 6,9,10,11,12,13)
 
-pdf("6-03-17/logplots_median.pdf")
+pdf("6-05-17/logplots_median.pdf")
 for (i in col){
   vars=wholedf[,c(2,i, 14)]
   names(vars)[2]=names(wholedf)[i]
   p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
-      geom_point()+
+      geom_jitter(height=0, width=0.15)+
       labs(x=names(vars)[2])+
       facet_wrap(~Date)
     plot(p)
@@ -45,7 +47,7 @@ for (i in col){
 graphics.off()
 
 
-###
+######mean as theshold value
 
 theshold=c()
 wholedf=data.frame()
@@ -58,12 +60,12 @@ for( i in 1:length(data_dt)){
 
 col=c(5, 6,9,10,11,12,13)
 
-pdf("6-03-17/logplots_mean.pdf")
+pdf("6-05-17/logplots_mean.pdf")
 for (i in col){
   vars=wholedf[,c(2,i, 14)]
   names(vars)[2]=names(wholedf)[i]
   p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
-    geom_point()+
+    geom_jitter(height=0, width=0.15)+
     labs(x=names(vars)[2])+
     facet_wrap(~Date)
   plot(p)
@@ -71,9 +73,7 @@ for (i in col){
 graphics.off()
 
 
-####
-
-
+####3rd quartile as threshold value
 theshold=c()
 wholedf=data.frame()
 for( i in 1:length(data_dt)){
@@ -85,34 +85,45 @@ for( i in 1:length(data_dt)){
 
 col=c(5, 6,9,10,11,12,13)
 
-pdf("6-03-17/logplots_3rd_qt.pdf")
+pdf("6-05-17/logplots_3rd_qt.pdf")
 for (i in col){
   vars=wholedf[,c(2,i, 14)]
   names(vars)[2]=names(wholedf)[i]
   p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
-    geom_point()+
+    geom_jitter(height=0, width=0.15)+
     labs(x=names(vars)[2])+
     facet_wrap(~Date)
   plot(p)
 }
 graphics.off()
 
+
+
+
 ###glmm and lmes
 
 
 wholedf$visits=as.numeric(visits)
 mylogit_med <- glmm(visits ~  Avg..open.flowers.per.inflorescence+
-                      Total...inflorescenses+tot_flowers
-                    ,  random = list(~ 0 + factor(Date), ~ 0 + factor(Location)), 
-                    varcomps.names = c("Date", "Location"),data = wholedf, 
-                    family.glmm = binomial.glmm, m = 10^3)
+                      Total...inflorescenses
+                    ,  random = list( ~ 0 + factor(Location)), 
+                    varcomps.names = c( "Location"),data = wholedf, 
+                    family.glmm = binomial.glmm, m = 10^4)
 summary(mylogit_med)
 
 
-lme_mod=lme(Honeybees ~ Avg..open.flowers.per.inflorescence+
-              Total...inflorescenses+tot_flowers,
-            data = wholedf, random=~1|factor(Date))
 
+mylogit_med <- glmm(visits ~  size
+                    ,  random = list(~ 0 + factor(pair)), 
+                    varcomps.names = c( "pair"),data = wholedf, 
+                    family.glmm = binomial.glmm, m = 10^4)
+summary(mylogit_med)
+
+
+
+
+lme_mod=lme(Honeybees ~ size,
+            data = wholedf, random=~1|factor(Location))
 summary(lme_mod)
 ###
 
