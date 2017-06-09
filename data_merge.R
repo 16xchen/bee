@@ -148,7 +148,7 @@ for(i in 1:length(obs_start_pos)){
   tms=weatime_pos[which(weatime_pos_rd==obs_start_pos_rd[i]|weatime_pos_rd==obs_end_pos_rd[i])]
   if(length(tms)==0){
     print(i)
-    weather_index[i]=666}
+    weather_index[i]=0}
   else{
     weather_index[i]=which(weatime_pos_rd==obs_start_pos_rd[i]|weatime_pos_rd==obs_end_pos_rd[i])[1]
   }}
@@ -157,7 +157,9 @@ for(i in 1:length(obs_start_pos)){
 weather_match=weather[weather_index,]
 
 dim(weather_match)
-
-
 bee_data_final=cbind(merged, weather_match[,c('Temperature', 'Humidity', 'Wind','Speed','Gust', 'Pressure','Solar')])
+bee_data_final$Start.Time=obs_start_pos
+bee_data_final$End.Time=obs_end_pos
+
+bee_data_final=bee_data_final[order(bee_data_final$Date),]
 write.csv(bee_data_final, file="pollinator_visitation_fullData.csv")
