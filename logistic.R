@@ -32,11 +32,11 @@ for( i in 1:length(data_dt)){
 }
 
 
-col=c(5, 6,9,10,11,12,13)
+col=c(7,10,11,12,13,14,15,16,17, 18, 19, 25)
 
-pdf("6-05-17/logplots_median.pdf")
+pdf("6-12-17/logplots_median.pdf")
 for (i in col){
-  vars=wholedf[,c(2,i, 14)]
+  vars=wholedf[,c(2,i, 26)]
   names(vars)[2]=names(wholedf)[i]
   p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
       geom_jitter(height=0, width=0.15)+
@@ -45,6 +45,19 @@ for (i in col){
     plot(p)
 }
 graphics.off()
+
+
+pdf("6-12-17/logplots_median_allDays.pdf")
+for (i in col){
+  vars=wholedf[,c(2,i, 26)]
+  names(vars)[2]=names(wholedf)[i]
+  p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
+    geom_jitter(height=0, width=0.15)+
+    labs(x=names(vars)[2])
+  plot(p)
+}
+graphics.off()
+
 
 
 ######mean as theshold value
@@ -113,9 +126,9 @@ summary(mylogit_med)
 
 
 
-mylogit_med <- glmm(visits ~  size
-                    ,  random = list(~ 0 + factor(pair)), 
-                    varcomps.names = c( "pair"),data = wholedf, 
+mylogit_med <- glmm(visits ~  Size
+                    ,  random = list(~ 0 + factor(Pair)), 
+                    varcomps.names = c( "Pair"),data = wholedf, 
                     family.glmm = binomial.glmm, m = 10^4)
 summary(mylogit_med)
 

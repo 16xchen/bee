@@ -1,7 +1,6 @@
 #data formatting for further pollinator visitation analysis
 #
 library(reshape2)
-setwd("/Users/HMCLoaner/bee")
 
 
 round.POSIXct <- function(x, units = c("mins", "5 mins", "10 mins", "15 
@@ -28,6 +27,8 @@ mins", "quarter hours", "30 mins", "half hours", "hours")){
 url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=1630939193'
 mydat=read.csv(text=gsheet2text(url, format='csv'))
 head(mydat)
+summary(mydat)
+dim(mydat)
 size=strsplit(as.character(mydat$Location), ' ')
 df=as.data.frame(t(matrix(unlist(size), 3)))
 names(df)=c('non', 'Pair', 'Size')
@@ -39,6 +40,7 @@ mydat$tot_flowers=mydat$Avg.open.flowers.per.inflorescenc*mydat$Total.infloresce
 mydat_small=mydat[, c('Date', 'Experiment.Week','Location', 'Plant.Number','Pair','Size', 'Start.Time',
                       'End.Time', 'Avg.open.flowers.per.inflorescence', 'Total.inflorescenses', 'Honeybees')]
 
+mydat_small=mydat_small[1:60,]
 
 #nectar data from google docs
 url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=212997740'
@@ -96,7 +98,6 @@ mean_nect=rbind(mean_nect[mean_nect$Experiment.Week==1,], add2,add2, add3, add3)
 
 mean_nect=mean_nect[order(mean_nect$Location), ]
 #
-mydat_small=mydat_small[-which(mydat_small$Experiment.Week==4),]
 #
 mydat_small=mydat_small[order(mydat_small$Location), ]
 merged=cbind(mydat_small, mean_nect)
@@ -129,13 +130,6 @@ obs_end_pos=as.POSIXct(obs_end , format = "%m/%d/%Y %H:%M")
 weatime=paste(weather$Date, weather$Time)
 weatime_pos=as.POSIXct(weatime , format = "%m/%d/%Y %H:%M %p")
 # 
-# 
-comp=weatime_pos[68]
-
-a=obs_start_pos[11]
-b=obs_end_pos[11]
-
-
 
 obs_start_pos_rd=round.POSIXct(obs_start_pos, 'quarter hours')
 obs_end_pos_rd=round.POSIXct(obs_end_pos, 'quarter hours')
@@ -160,6 +154,18 @@ dim(weather_match)
 bee_data_final=cbind(merged, weather_match[,c('Temperature', 'Humidity', 'Wind','Speed','Gust', 'Pressure','Solar')])
 bee_data_final$Start.Time=obs_start_pos
 bee_data_final$End.Time=obs_end_pos
-
 bee_data_final=bee_data_final[order(bee_data_final$Date),]
+
+
+bee_data_final$Temperature=as.numeric(sub('°F','',bee_data_final$Temperature))
+
+bee_data_final$Speed=as.numeric(sub('mph','',bee_data_final$Speed))
+
+bee_data_final$Solar=as.numeric(sub('w/m²','',bee_data_final$Solar))
+
+
+
+bee_data_final$Clustered=(bee_data_final$Pair==2|bee_data_final$Pair==4|bee_data_final$Pair==6)
+bee_data_final$East=(bee_data_final$Pair==2|bee_data_final$Pair==1)
+
 write.csv(bee_data_final, file="pollinator_visitation_fullData.csv")

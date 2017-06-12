@@ -2,14 +2,17 @@
 # install.packages("ggplot2")
 # install.packages("reshape2")
 #install.packages('corrplot')
-install.packages('Deducer')
+#install.packages('Deducer')
+install.packages("devtools")
+library(devtools)
+install_github("ggobi/ggally")
 library(Deducer)
 library(corrplot)
 library(ggplot2)
 library(GGally)
 library(reshape2)
 library(gsheet)
-#install.packages('GenABEL')
+install.packages('GenABEL')
 library(GenABEL)
 
 setwd('~/bee/')
@@ -114,12 +117,6 @@ mydat_small$Plant.Number=as.factor(mydat_small$Plant.Number)
 mydat_small$Pair=as.factor(mydat_small$Pair)
 
 
-mydat_small$Temperature=as.numeric(sub('°F','',mydat_small$Temperature))
-
-mydat_small$Speed=as.numeric(sub('mph','',mydat_small$Speed))
-
-mydat_small$Solar=as.numeric(sub('w/m²','',mydat_small$Solar))
-
 
 boo=c()
 for (i in 1:ncol(mydat_small)){
@@ -205,4 +202,10 @@ for(i in 1:ncol(mydat_small_val_log)){
 png('6-08-17/pairwise_cor_all_log.png')
 ggpairs(mydat_small_val_log, lower=list(continuous=my_fn), verbose=F)
 graphics.off()
+
+png('6-08-17/pairwise_cor_all.png')
+ggpairs(mydat_small_val, lower=list(continuous=my_fn), verbose=F)
+graphics.off()
+
+
 
