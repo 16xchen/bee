@@ -1,24 +1,18 @@
-#data formatting for further pollinator visitation analysis
-#
-#install.packages('GenABEL')
+---
+title: "Formatting White Sage Data"
+author: "Xingyao Chen"
+date: "6/20/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
 #install.packages("devtools")
-#install_github("ggobi/ggally")
 # install.packages('gsheet')
-# install.packages("ggplot2")
-# install.packages("reshape2")
-#install.packages('corrplot')
-#install.packages('Deducer')
 #install.packages('reshape2')
 library(reshape2)
 library(devtools)
-library(Deducer)
-library(corrplot)
-library(ggplot2)
-library(GGally)
-library(reshape2)
 library(gsheet)
-library(GenABEL)
-
 
 round.POSIXct <- function(x, units = c("mins", "5 mins", "10 mins", "15 
 mins", "quarter hours", "30 mins", "half hours", "hours")){
@@ -39,30 +33,31 @@ mins", "quarter hours", "30 mins", "half hours", "hours")){
   secs <- 3600*H + 60*M + S
   as.POSIXct(round(secs/r)*r, origin=D)
 }
+```
 
-#Field observation data from google docs
+##Load field observation data from Gdrive
+```{r}
 url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=1630939193'
 mydat=read.csv(text=gsheet2text(url, format='csv'))
-head(mydat)
-summary(mydat)
-dim(mydat)
+names(mydat)
 size=strsplit(as.character(mydat$Location), ' ')
 df=as.data.frame(t(matrix(unlist(size), 3)))
 names(df)=c('non', 'Pair', 'Size')
 mydat=cbind(mydat, df[,2:3])
 head(mydat)
-names(mydat)
 mydat$Total.Flowers=mydat$Avg.open.flowers.per.inflorescenc*mydat$Total.inflorescenses
-
 mydat_small=mydat[, c('Date', 'Experiment.Week','Location', 'Plant.Number','Pair','Size', 'Start.Time',
                       'End.Time', 'Avg.open.flowers.per.inflorescence', 'Total.inflorescenses','Total.Flowers', 'Honeybees')]
 
-#mydat_small=mydat_small[1:60,]
+summary(mydat_small)
+```
 
-#nectar data from google docs
+##Load nectar data from Gdrive
+
+```{r pressure, echo=FALSE}
 url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=212997740'
 nect=read.csv(text=gsheet2text(url, format='csv'))
-head(nect)
+names(nect)
 summary(nect)
 
 size=strsplit(as.character(nect$Location), ' ')
@@ -71,18 +66,20 @@ names(df)=c('non', 'Pair', 'Size')
 nect=cbind(nect[1:nrow(df),], df[,2:3])
 nect$sugar.concentration=as.numeric(as.character(nect$sugar.concentration))
 nect$sugar.content..µg.=as.numeric(as.character(nect$sugar.content..µg.))
-
+#Remove outliers
 nect=nect[which(nect$sugar.concentration<1.9),]
-
+#get only important info
 nect_small=nect[, c('Experiment.Week','Location','Plant.number','Pair', 'Size', 'volume.of.nectar..µl.','sugar.concentration', 
                     'sugar.content..µg.')]
-summary(nect_small)
-
-
+#zeros are annoying and meaningless
 zeros=which(nect_small$sugar.concentration==0)
 nect_small=nect_small[-zeros, ]
 nect_small=na.omit(nect_small)
 summary(nect_small)
+```
+
+##Calculate aerage and variance data for each plant  
+```{r}
 ##average of 5 flowers
 volume=acast(nect_small[,c(1:2,6)],  Experiment.Week~Location, mean)
 conc=acast(nect_small[,c(1:2, 7)],  Experiment.Week~Location, mean)
@@ -93,73 +90,72 @@ volume_var=acast(nect_small[,c(1:2,6)],  Experiment.Week~Location, var)
 conc_var=acast(nect_small[,c(1:2, 7)],  Experiment.Week~Location, var)
 content_var=acast(nect_small[,c(1:2,8)],  Experiment.Week~Location, var)
 
+#et rid of NAs
 booNA=!is.na(melt(volume)$value)
-
 
 vol=na.omit(melt(volume))
 sugar.conc=na.omit(melt(conc))
 sugar.content=na.omit(melt(content))
 
-
 vol_var=melt(volume_var)[booNA,]
 sugar.conc_var=melt(conc_var)[booNA,]
 sugar.content_var=melt(content_var)[booNA,]
 
+#construct new ndata frame
 mean_nect=cbind(vol[,1:2], data.frame(vol$value, sugar.conc$value, sugar.content$value, vol_var$value, sugar.conc_var$value,sugar.content_var$value))
 names(mean_nect)=c("Experiment.Week", "Location", 'Volume', "Sugar_conc", 'Sugar_content', 'Volume_var', 'Sugar_conc_var', 'Sugar_content_var')
-
-
 mean_nect=mean_nect[order(mean_nect$Experiment.Week), ]
 head(mean_nect)
+```
 
+##Merge field obs data with nectar data
+```{r}
+#Each week's nectar data must be duplicated
 add1=mean_nect[mean_nect$Experiment.Week==1,]
 add2=mean_nect[mean_nect$Experiment.Week==2,]
 add3=mean_nect[mean_nect$Experiment.Week==3,]
 add4=mean_nect[mean_nect$Experiment.Week==4,]
 
-
+#Excepted for week 1
 mean_nect=rbind(mean_nect[mean_nect$Experiment.Week==1,], add2,add2, add3, add3, add4, add4)
 
+#make sure they are the same order
 mean_nect=mean_nect[order(mean_nect$Location), ]
-#
-#
 mydat_small=mydat_small[order(mydat_small$Location), ]
+#commence the merge
 merged=cbind(mydat_small, mean_nect)
-
+#uh oh, remove duplicate names
 names(merged)
 merged=merged[, -c(13:14)]
+```
 
-
-
-
-
-#merge weather station data with pollinator visitation data
+##Load BFS Weather Station Data from GDrive (scraped from https://www.wunderground.com/personal-weather-station/dashboard?ID=KCACLARE11)
+```{r}
 url2='docs.google.com/spreadsheets/d/1Wm0LVMGEWBQnz6jsSKjdrzKi5ARMhUAzZMN_chvg7M4/edit?usp=sharing'
 weather=read.csv(text=gsheet2text(url2, format='csv'))
-head(weather)
-
 weather=weather[-which(weather$Time=="Time"),]
+names(weather)
 summary(weather)
-summary(merged)
 
+##convert field obs times to POSIX
+#Start:
 obs_start=paste(merged$Date, merged$Start.Time)
 obs_start_pos=as.POSIXct(obs_start , format = "%m/%d/%Y %H:%M")
-
-
-
+#End:
 obs_end=paste(merged$Date, merged$End.Time)
 obs_end_pos=as.POSIXct(obs_end , format = "%m/%d/%Y %H:%M")
 
-
+#Do the same with the weather data
 weatime=paste(weather$Date, weather$Time)
 weatime_pos=as.POSIXct(weatime , format = "%m/%d/%Y %H:%M %p")
 # 
-
+#round to nearest 15 min for easy matching
 obs_start_pos_rd=round.POSIXct(obs_start_pos, 'quarter hours')
 obs_end_pos_rd=round.POSIXct(obs_end_pos, 'quarter hours')
-
 weatime_pos_rd=round.POSIXct(weatime_pos, 'quarter hours')
 
+
+#Make some magic (get only the time relevant weather data)
 weather_index=c()
 for(i in 1:length(obs_start_pos)){
   #tms=weatime_pos[which(weatime_pos_rd==obs_start_pos_rd[i]|weatime_pos_rd==obs_start_pos_rd[i]-15*60|weatime_pos_rd==obs_end_pos_rd[i]|(weatime_pos_rd==obs_end_pos_rd[i]+15*60))]
@@ -170,34 +166,41 @@ for(i in 1:length(obs_start_pos)){
   else{
     weather_index[i]=which(weatime_pos_rd==obs_start_pos_rd[i]|weatime_pos_rd==obs_end_pos_rd[i])[1]
   }}
-
-
 weather_match=weather[weather_index,]
 
+#check the dimention before merging
 dim(weather_match)
+dim(merged)
+#ayy
+#almost there
 bee_data_final=cbind(merged, weather_match[,c('Temperature', 'Humidity', 'Wind','Speed','Gust', 'Pressure','Solar')])
 bee_data_final$Start.Time=obs_start_pos
 bee_data_final$End.Time=obs_end_pos
 bee_data_final=bee_data_final[order(bee_data_final$Date),]
+```
 
-
+##Include some other important data
+```{r}
+#We want weather data to be numeric, it's currently a character
 bee_data_final$Temperature=as.numeric(sub('°F','',bee_data_final$Temperature))
-
 bee_data_final$Speed=as.numeric(sub('mph','',bee_data_final$Speed))
-
 bee_data_final$Solar=as.numeric(sub('w/m²','',bee_data_final$Solar))
 
 
-
+#Is the plant clustered?
 bee_data_final$Clustered=(bee_data_final$Pair==2|bee_data_final$Pair==4|bee_data_final$Pair==6|bee_data_final$Pair==7)
+#Is the plant in East field?
 bee_data_final$East=(bee_data_final$Pair==2|bee_data_final$Pair==1|bee_data_final$Pair==7)
 
+#Is is a hot day? (Threshold is just the mean)
 bee_data_final$hotDay=bee_data_final$Temperature>mean(bee_data_final$Temperature)
+```
 
+#Use the media honeybee each day as the threshold for determining whether a bee visits a certain plance
+```{r}
 data_dt=split(bee_data_final, bee_data_final$Date)
 
-
-###median as theshold value
+##median as theshold value
 theshold=c()
 wholedf=data.frame()
 for( i in 1:length(data_dt)){
@@ -205,10 +208,17 @@ for( i in 1:length(data_dt)){
   data_dt[[i]]$visits=(data_dt[[i]]$Honeybees>=theshold[i])
   wholedf=rbind(wholedf, data_dt[[i]])
 }
+#look at the thresholds
+theshold
 
+#make these into factors
 wholedf$Experiment.Week=as.factor(wholedf$Experiment.Week)
 wholedf$Plant.Number=as.factor(wholedf$Plant.Number)
+wholedf$Pair=as.factor(wholedf$Pair)
 
 
+summary(wholedf)
+#Export the data into csv
 setwd('~/bee/')
 write.csv(wholedf, file="pollinator_visitation_fullData.csv")
+```
