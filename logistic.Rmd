@@ -1,0 +1,96 @@
+---
+title: "Logistic Regression and Modeling"
+author: "Xingyao Chen"
+date: "6/21/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+#install.packages("glmm")
+library(glmm)
+library(ggplot2)
+```
+
+##Logistic Regressions with Non-Transformed Data
+```{r}
+data=read.csv('pollinator_visitation_fullData.csv')
+data$Experiment.Week=as.factor(data$Experiment.Week)
+data$Plant.Number=as.factor(data$Plant.Number)
+data$Pair=as.factor(data$Pair)
+
+col=c('Size','Avg.open.flowers.per.inflorescence','Total.inflorescenses','Total.Flowers','Honeybees' ,'Volume','Sugar_conc','Sugar_content', 'Temperature','Solar', 'Clustered')
+
+for (i in col){
+  vars=data[,c('Date',i, 'visits')]
+  p=ggplot(data=vars, aes(x=vars[,2], y=visits))+
+      geom_jitter(height=0, width=0.15)+
+      labs(x=i)+
+      facet_wrap(~Date)
+    plot(p)
+}
+
+```
+
+
+
+##Logistic Regression with Log-Transformed Data
+```{r}
+data2=read.csv('pollinator_visitation_fullData_logTrans.csv')
+data2$Experiment.Week=as.factor(data2$Experiment.Week)
+data2$Plant.Number=as.factor(data2$Plant.Number)
+data2$Pair=as.factor(data2$Pair)
+
+col2=c('Size','Avg.open.flowers.per.inflorescence','Total.inflorescenses','Total.Flowers','Honeybees' ,'Volume','Sugar_conc','Sugar_content', 'Temperature','Solar', 'Clustered')
+
+for (j in col2){
+  vars=data2[,c('Date',j, 'visits')]
+  p2=ggplot(data=vars, aes(x=vars[,2], y=visits))+
+      geom_jitter(height=0, width=0.15)+
+      labs(x=j)+
+      facet_wrap(~Date)
+  plot(p2)
+}
+```
+
+##General Linear Modeling With Mixed Effects
+#Non-transformed first
+```{r}
+mylogit1 <- glmm(visits ~  Avg.open.flowers.per.inflorescence+
+                      Total.inflorescenses
+                    ,  random = list( ~ 0 + factor(Pair), ~0+factor(East)), 
+                    varcomps.names = c( "Location", 'East'),data = data, 
+                    family.glmm = binomial.glmm, m = 10^4)
+
+summary(mylogit1)
+
+mylogit2 <- glmm(visits ~  Size+Clustered
+                    ,  random = list( ~ 0 + factor(Pair), ~0+factor(East)), 
+                    varcomps.names = c( "Location", 'East'),data = data, 
+                    family.glmm = binomial.glmm, m = 10^4)
+
+summary(mylogit2)
+```
+
+
+
+#Log-transformed second
+```{r}
+mylogit1_log <- glmm(visits ~  Avg.open.flowers.per.inflorescence+
+                      Total.inflorescenses
+                    ,  random = list( ~ 0 + factor(Pair), ~0+factor(East)), 
+                    varcomps.names = c( "Location", 'East'),data = data2, 
+                    family.glmm = binomial.glmm, m = 10^4)
+
+summary(mylogit1_log)
+
+mylogit2_log <- glmm(visits ~  Size+Clustered
+                    ,  random = list( ~ 0 + factor(Pair), ~0+factor(East)), 
+                    varcomps.names = c( "Location", 'East'),data = data2, 
+                    family.glmm = binomial.glmm, m = 10^4)
+
+summary(mylogit2_log)
+```
