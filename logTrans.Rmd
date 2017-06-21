@@ -1,0 +1,60 @@
+---
+title: "Log Transforming the Data"
+author: "Xingyao Chen"
+date: "6/21/2017"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+
+mydat_small=read.csv('pollinator_visitation_fullData.csv')
+
+
+mydat_small$Experiment.Week=as.factor(mydat_small$Experiment.Week)
+mydat_small$Plant.Number=as.factor(mydat_small$Plant.Number)
+mydat_small$Pair=as.factor(mydat_small$Pair)
+
+
+
+```
+#Make some adjustments before Log10-ing
+```{r}
+mydat_small=mydat_small[,-1]
+boo=c()
+for (i in 1:ncol(mydat_small)){
+  boo[i]=is.numeric(mydat_small[,i])
+}
+
+#Cannot take the log of 0, so added a small value to each column that contains 0's
+mydat_small_val_log=mydat_small
+mydat_small_val_log$Honeybees=mydat_small_val_log$Honeybees+1
+mydat_small_val_log$Speed=mydat_small_val_log$Speed+0.1
+
+#log10 transformation happenning
+for(i in 1:ncol(mydat_small_val_log)){
+  if(boo[i])
+    mydat_small_val_log[,i]=log10(mydat_small_val_log[,i])
+}
+#peek
+summary(mydat_small_val_log)
+
+
+data_dt=split(mydat_small_val_log, mydat_small$Date)
+###median as theshold value
+theshold=c()
+wholedf=data.frame()
+for( i in 1:length(data_dt)){
+  theshold[i]=median(data_dt[[i]]$Honeybees)
+  data_dt[[i]]$visits=(data_dt[[i]]$Honeybees>=theshold[i])
+  wholedf=rbind(wholedf, data_dt[[i]])
+}
+mydat_small_val_log$visits=wholedf$visits
+head(mydat_small_val_log)
+write.csv(mydat_small_val_log,'pollinator_visitation_fullData_logTrans.csv')
+```

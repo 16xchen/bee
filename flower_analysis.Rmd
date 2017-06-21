@@ -1,0 +1,105 @@
+---
+title: "Initial Analysis of White Sage Data"
+author: "Xingyao Chen"
+date: "6/20/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+# install.packages('gsheet')
+# install.packages("ggplot2")
+# install.packages("reshape2")
+#install.packages("devtools")
+#install_github("ggobi/ggally")
+library(devtools)
+library(ggplot2)
+library(GGally)
+library(reshape2)
+library(gsheet)
+```
+
+## Load in the clean dataset
+```{r}
+setwd('~/bee/')
+mydat_small=read.csv('pollinator_visitation_fullData.csv')
+```
+
+##Plot Honeybees vs. Explainatory variable, with groupings
+```{r}
+ggplot(mydat_small, aes(x=Total.inflorescenses, y=Honeybees, color=Size, group=Pair))+
+  geom_line(color='gray')+
+  geom_point()+
+  facet_wrap(~Date)+
+  theme_bw()
+
+ggplot(mydat_small, aes(x=Avg.open.flowers.per.inflorescence, y=Honeybees, color=Size, group=Pair))+
+  geom_line(color='gray')+
+  geom_point()+
+  facet_wrap(~Date)+
+  theme_bw()
+
+ggplot(mydat_small, aes(x=Total.Flowers, y=Honeybees, color=Size, group=Pair))+
+  geom_line(color='gray')+
+  geom_point()+
+  facet_wrap(~Date)+
+  labs(x="Total Flowers")+
+  theme_bw()
+
+ggplot(mydat_small, aes(x=Sugar_conc, y=Honeybees, group=Pair, color=Size))+
+  geom_point()+
+  geom_line(color='gray')+
+  facet_wrap(~Date)+
+  theme_bw()
+
+ggplot(mydat_small, aes(x=Sugar_content, y=Honeybees, group=Pair, color=Size))+
+  geom_point()+
+  geom_line(color='gray')+
+  facet_wrap(~Date)+
+  theme_bw()
+
+ggplot(mydat_small, aes(x=Volume, y=Honeybees, group=Pair, color=Size))+
+  geom_point()+
+  geom_line(color='gray')+
+  facet_wrap(~Date)+
+  theme_bw()
+```
+
+#Load in the raw nectar data from Gdrive
+```{r}
+url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=212997740'
+nect=read.csv(text=gsheet2text(url, format='csv'))
+head(nect)
+size=strsplit(as.character(nect$Location), ' ')
+df=as.data.frame(t(matrix(unlist(size), 3)))
+names(df)=c('non', 'Pair', 'Size')
+nect=cbind(nect, df[,2:3])
+nect$sugar.concentration=as.numeric(as.character(nect$sugar.concentration))
+nect$sugar.content..µg.=as.numeric(as.character(nect$sugar.content..µg.))
+#Clean up outliers
+nect=nect[which(nect$sugar.concentration<1.9),]
+zeros=which(nect$sugar.concentration==0)
+nect=nect[-zeros, ]
+```
+
+#Make some boxplots
+```{r}
+ggplot(nect, aes(y=sugar.concentration, x=Pair, fill=Size))+
+  geom_boxplot()+
+  facet_wrap(~Date)+
+  theme_bw()
+
+ggplot(nect, aes(y=sugar.content..µg., x=Pair, fill=Size))+
+  geom_boxplot()+
+  facet_wrap(~Date)+
+  theme_bw()
+
+
+ggplot(nect, aes(y=volume.of.nectar..µl., x=Pair, fill=Size))+
+  geom_boxplot()+
+  facet_wrap(~Date)+
+  theme_bw()
+```

@@ -1,0 +1,81 @@
+---
+title: "Correlations"
+author: "Xingyao Chen"
+date: "6/21/2017"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(cache = TRUE)
+#install.packages('GGally')
+#install.paackages('ggplot2)
+#install.packages("qtlcharts",  repos = 'http://cran.rstudio.com/')
+library(GGally)
+library(qtlcharts)
+library(ggplot2)
+my_fn <- function(data, mapping, ...){
+  p <- ggplot(data = data, mapping = mapping) + 
+    geom_point(size=0.5) + 
+    geom_smooth(method=lm, fill="blue4", color="blue1", ...)
+  return(p)
+}
+```
+
+```{r}
+mydat_small=read.csv('pollinator_visitation_fullData.csv')[,-1]
+
+mydat_small$Experiment.Week=as.factor(mydat_small$Experiment.Week)
+mydat_small$Plant.Number=as.factor(mydat_small$Plant.Number)
+mydat_small$Pair=as.factor(mydat_small$Pair)
+
+mydat_small_log=read.csv('pollinator_visitation_fullData_logTrans.csv')[,-1]
+
+mydat_small_log$Experiment.Week=as.factor(mydat_small_log$Experiment.Week)
+mydat_small_log$Plant.Number=as.factor(mydat_small_log$Plant.Number)
+mydat_small_log$Pair=as.factor(mydat_small_log$Pair)
+
+```
+
+
+##Make a pairwise correlation plot for the untransformed data
+```{r, warning=F}
+boo=c()
+for (i in 1:ncol(mydat_small)){
+  boo[i]=is.numeric(mydat_small[,i])
+}
+ggpairs(mydat_small[,boo][,-c(9:10,12:13)], lower=list(continuous=my_fn))
+```
+
+
+#This is a more complete correlation heatmap, and it's interactive! (Only on html verson of Rmd)
+```{r}
+p1=iplotCorr(mydat_small[,boo],mydat_small$visits, reorder=TRUE,
+          chartOpts=list(cortitle="Correlation Heatmap, Untransformed",
+                         scattitle="Scatterplot | Visits",
+                         scatcolors=c("red","lightblue")
+          ))
+p1
+```
+
+
+
+##Make a pairwise correlation plot for the log transformed data
+```{r, warning=F}
+ggpairs(mydat_small_log[,boo][,-c(9:10,12:13)], lower=list(continuous=my_fn))
+```
+
+
+#Now the interactive heatmap (Only on html verson of Rmd)
+
+```{r, corheat}
+p2=iplotCorr(mydat_small_log[,boo],mydat_small_log$visits, reorder=TRUE,
+          chartOpts=list(cortitle="Correlation Heatmap, Log10 Transformed",
+                         scattitle="Scatterplot | Visits",
+                         scatcolors=c("red","lightblue")
+          ))
+p2
+```
+
