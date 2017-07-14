@@ -51,7 +51,7 @@ mydat_small_val_log$Date=mydat_small$Date
 mydat_small_val_log$East=mydat_small$East
 mydat_small_val_log$Clustered=mydat_small$Clustered
 mydat_small_val_log$hotDay=mydat_small$hotDay
-
+mydat_small_val_log$Location=mydat_small$Location
 
 data_dt=split(mydat_small_val_log, mydat_small$Date)
 ###median as theshold value
