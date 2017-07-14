@@ -143,16 +143,16 @@ summary(weather)
 summary(merged)
 
 obs_start=paste(merged$Date, merged$Start.Time)
-obs_start_pos=as.POSIXct(obs_start , format = "%m/%d/%Y %H:%M")
+obs_start_pos=as.POSIXct(obs_start , format = "%m/%d/%Y %I:%M")
 
 
 
 obs_end=paste(merged$Date, merged$End.Time)
-obs_end_pos=as.POSIXct(obs_end , format = "%m/%d/%Y %H:%M")
+obs_end_pos=as.POSIXct(obs_end , format = "%m/%d/%Y %I:%M")
 
 
 weatime=paste(weather$Date, weather$Time)
-weatime_pos=as.POSIXct(weatime , format = "%m/%d/%Y %H:%M %p")
+weatime_pos=as.POSIXct(weatime , format = "%m/%d/%Y %I:%M %p")
 # 
 
 obs_start_pos_rd=round.POSIXct(obs_start_pos, 'quarter hours')
@@ -208,6 +208,22 @@ for( i in 1:length(data_dt)){
 
 wholedf$Experiment.Week=as.factor(wholedf$Experiment.Week)
 wholedf$Plant.Number=as.factor(wholedf$Plant.Number)
+
+
+
+
+url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=1620742018'
+ht=read.csv(text=gsheet2text(url, format='csv'))
+ht=ht[order(ht$White.Sage.Plant),]
+
+
+for(i in 1:nrow(wholedf)){
+  for(j in 1:nrow(ht)){
+    if( wholedf$Location[i]==ht$White.Sage.Plant[j] && wholedf$Plant.Number[i]==ht$Plant.Number[j]){
+      wholedf$height[i]=ht$Height.m[j]
+    }
+  }
+}
 
 
 setwd('~/bee/')

@@ -27,7 +27,7 @@ for (i in 1:ncol(mydat_small)){
 
 
 mydat_small_val=mydat_small[,boo]
-mydat_small_val=mydat_small_val[,-c(1)]
+#mydat_small_val=mydat_small_val[,-c(1)]
 
 
 mydat_small_val_log=mydat_small_val

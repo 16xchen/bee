@@ -1,0 +1,15 @@
+library(gsheet)
+library(ggplot2)
+setwd('bee')
+url='docs.google.com/spreadsheets/d/1LKr8Ken8p1jpTGpbn2a_napP6uNJ4sEnN8gdDSEQGxY/edit#gid=258994675'
+bucknect=read.csv(text=gsheet2text(url, format='csv'))
+head(bucknect)
+size=strsplit(as.character(bucknect$Location), ' ')
+df=as.data.frame(t(matrix(unlist(size), 3)))
+names(df)=c('non', 'Pair', 'Size')
+bucknect=cbind(bucknect, df[,2:3])
+system('mkdir 6-26-17')
+png('6-26-17/buckwheat_nectar_d1.png')
+ggplot(data=bucknect, aes(y=sugar.content.flower.µg, x=Pair, fill=Size))+
+  geom_boxplot()
+graphics.off()
