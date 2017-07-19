@@ -5,10 +5,10 @@ library(glmm)
 #library(ggbiplot)
 library(lme4)
 
-install.packages('dplyr')
+#install.packages('dplyr')
 library(dplyr)
 library(devtools)
-devtools::install_github("strengejacke/sjPlot",force = TRUE)
+#devtools::install_github("strengejacke/sjPlot",force = TRUE)
 library(sjPlot)
 library(sjmisc)
 
@@ -31,14 +31,17 @@ for( i in 1:length(data_dt)){
 logData=wholedf
 
 
-system('mkdir 7-13-2017')
-png('7-13-2017/scatter_classic.png')
-ggplot(data=logData, aes(x='', y=Honeybees, color=Size))+
+system('mkdir forPoster')
+pdf('forPoster/scatter_classic.pdf')
+p=ggplot(data=logData, aes(x='', y=Honeybees, color=Size))+
   geom_jitter(width = 0.15)+
   facet_grid(~Date)+
-  geom_hline(aes(yintercept = Median),lty=2)+
-  labs(x="Days")+
-  theme_classic()
+  geom_hline(aes(yintercept = Median),lty=5, size=0.8)+
+  labs(x="Days", size=4)+
+  theme_classic()+
+  theme(axis.title=element_text(size=14), legend.title=element_text(size=14),legend.text=element_text(size=12))
+plot(p)
+#dev.off()
 graphics.off()
 
 
@@ -75,16 +78,19 @@ tit=c('Reward+Efficiency','Poential Reward for Colony', 'Reward per Inflorescens
 #p=sjp.lmer(mylogit, type = "ri.slope")
 
 
-system('mkdir 7-14-2017')
+#system('mkdir 7-14-2017')
 for(i in 1:length(vars)){
   p=sjp.lmer(mylogit, type = "ri.slope",vars = vars[i], facet.grid = FALSE)
   xax=logData[,vars[i]]
   ploot=p[[2]][[1]]+geom_point(data=logData, aes(y=Honeybees, x=xax, color=Date))+
     labs(x=paste0(vars[i]," (p-val = ",pvals[i],')'))+
+    scale_fill_discrete(name = "Dates")
     ggtitle(tit[i])+
-    theme_classic()
-  png(paste0('7-14-2017/lmerFull_fixedSlope_',vars[i],'.png'))
+    theme_classic()+
+    theme(axis.title=element_text(size=14), legend.title=element_text(size=14),legend.text=element_text(size=12))
+  pdf(paste0('forPoster/lmerFull_fixedSlope_',vars[i],'.pdf'))
   plot(ploot)
+  #dev.off()
   graphics.off()
 }
 
@@ -92,11 +98,14 @@ for(i in 1:length(vars)){
   ploot2=sjp.lmer(mylogit, type = "pred", facet.grid = FALSE,
                   vars = c(vars[i],'Date'))
   ploot2=ploot2[[2]]+
-    labs(x=paste0(vars[i]," (p-val = ",pvals[i],')'))+
-    ggtitle(tit[i])+
-    theme_classic()
-  png(paste0('7-14-2017/lmerFull_diffSlope2_',vars[i],'.png'))
+    labs(x=vars[i])+
+    ggtitle(tit[i], subtitle=paste0("(p-val = ",pvals[i],')'))+
+    theme_classic()+
+    scale_color_brewer(palette = 'Paired')+
+    theme(title=element_text(size=14, face='bold'),axis.title=element_text(size=14), legend.title=element_text(size=14),legend.text=element_text(size=12))
+  pdf(paste0('forPoster/lmerFull_diffSlope2_',vars[i],'.pdf'))
   plot(ploot2)
+  #dev.off()
   graphics.off()
 }
 

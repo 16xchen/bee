@@ -1,0 +1,9 @@
+Methods:
+To determine the effect of each variable on the 
+rate of honeybee visitation, a linear model with mix effects was 
+applied (Fig #), using restrict maximum liklihood (REML) for parameter estimation.
+
+
+Results:
+According to the model, Average open flowers per infloresce had the most significant effect 
+on the rate of honeybee visitation (p-val=1.757e-07), while other factors did not have a significant effect (p-vals <0.05).
