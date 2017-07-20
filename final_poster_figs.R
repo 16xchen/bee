@@ -4,7 +4,6 @@ library(glmm)
 #install_github("ggbiplot", "vqv")
 #library(ggbiplot)
 library(lme4)
-
 #install.packages('dplyr')
 library(dplyr)
 library(devtools)
@@ -16,6 +15,14 @@ library(sjmisc)
 setwd('../bee')
 logData=read.csv('pollinator_visitation_fullData_logTrans.csv')
 head(logData)
+logData_split=split(logData, logData$Date)
+ttest=data.frame()
+for(i in 1:length(logData_split)){
+  add=data.frame(Date=names(logData_split)[i],LargeVisit=sum(logData_split[[i]]$Visits&logData_split[[i]]$Size=='Large'), SmallVisit=sum(logData_split[[i]]$Visits&logData_split[[i]]$Size=='Small'))
+  ttest=rbind(ttest, add)
+}
+
+t.test(ttest$LargeVisit, ttest$SmallVisit, alternative='greater')
 
 
 data_dt=split(logData, logData$Date)
@@ -56,11 +63,13 @@ graphics.off()
 
 library(car)
 
+
+summary(logData)
 mylogit <- lmer(Honeybees ~
+                  height+
                   Avg.open.flowers.per.inflorescence+
                   Total.inflorescenses+
                   Sugar_content+
-                  height+
                   (1|Date), data=logData)
 
 

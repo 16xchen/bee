@@ -1,0 +1,11 @@
+base
+Matrix
+lme4
+dplyr
+devtools
+sjPlot
+sjmisc
+reshape2
+ggplot2
+car
+bindrcpp
